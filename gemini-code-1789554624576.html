@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LCI Transport Management System</title>
+    <style>
+        :root {
+            --primary-blue: #004899;
+            --primary-dark: #002f66;
+            --accent-cyan: #00a3e0;
+            --bg-light: #f4f7fa;
+            --surface-white: #ffffff;
+            --text-dark: #2c3e50;
+            --text-muted: #6c757d;
+            --border-color: #e2e8f0;
+            --danger-red: #d9534f;
+            --warning-amber: #f0ad4e;
+            --success-green: #28a745;
+            --sidebar-width: 250px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* --- LOGIN SCREEN --- */
+        #login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-blue) 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            padding: 1rem;
+        }
+
+        .login-card {
+            background: var(--surface-white);
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+        }
+
+        .login-logo {
+            margin-bottom: 1.5rem;
+        }
+
+        .login-logo img {
+            max-width: 200px;
+            height: auto;
+        }
+
+        .login-card h2 {
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+            font-size: 1.4rem;
+        }
+
+        .login-card p {
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem;
+        }
+
+        /* --- LAYOUT & NAVIGATION --- */
+        #app-container {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--primary-dark);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 1.2rem 1rem;
+            background-color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-header img {
+            max-width: 160px;
+            height: auto;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 1rem 0;
+            flex-grow: 1;
+        }
+
+        .sidebar-menu li a {
+            display: flex;
+            align-items: center;
+            padding: 0.85rem 1.5rem;
+            color: rgba(255,255,255,0.85);
+            text-decoration: none;
+            font-size: 0.95rem;
+            border-left: 4px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .sidebar-menu li a:hover, .sidebar-menu li a.active {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+            border-left-color: var(--accent-cyan);
+        }
+
+        .sidebar-user {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            background-color: rgba(0,0,0,0.15);
+            font-size: 0.85rem;
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex-grow: 1;
+            padding: 2rem;
+            max-width: calc(100% - var(--sidebar-width));
+        }
+
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            background: var(--surface-white);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        }
+
+        .header-title h1 {
+            font-size: 1.4rem;
+            color: var(--primary-blue);
+        }
+
+        .header-title span {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* --- FORMS & INPUTS --- */
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.4rem;
+            font-weight: 600;
+            font-size: 0.88rem;
+            color: var(--text-dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.65rem 0.85rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 3px rgba(0,163,224,0.15);
+        }
+
+        .form-control:disabled, .form-control[readonly] {
+            background-color: #e9ecef;
+            opacity: 1;
+        }
+
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+
+        /* --- BUTTONS & BADGES --- */
+        .btn {
+            padding: 0.65rem 1.25rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary { background-color: var(--primary-blue); color: white; }
+        .btn-primary:hover { background-color: var(--primary-dark); }
+        .btn-accent { background-color: var(--accent-cyan); color: white; }
+        .btn-secondary { background-color: #6c757d; color: white; }
+        .btn-danger { background-color: var(--danger-red); color: white; }
+        .btn-danger:hover { background-color: #c82333; }
+        .btn-sm { padding: 0.35rem 0.65rem; font-size: 0.8rem; }
+
+        .badge {
+            padding: 0.3em 0.65em;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+
+        .badge-pending { background-color: #ffeeba; color: #856404; }
+        .badge-in-transit { background-color: #b8daff; color: #004085; }
+        .badge-delivered { background-color: #c3e6cb; color: #155724; }
+        .badge-overdue { background-color: #f5c6cb; color: #721c24; }
+        .badge-active { background-color: #d4edda; color: #155724; }
+        .badge-inactive { background-color: #f8d7da; color: #721c24; }
+
+        /* --- CARDS & PANELS --- */
+        .card {
+            background: var(--surface-white);
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            color: var(--primary-blue);
+            font-weight: 700;
+        }
+
+        /* --- KPIS --- */
+        .kpi-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .kpi-card {
+            background: var(--surface-white);
+            padding: 1.25rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-blue);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        }
+
+        .kpi-card.kpi-warning { border-left-color: var(--warning-amber); }
+        .kpi-card.kpi-danger { border-left-color: var(--danger-red); }
+        .kpi-card.kpi-success { border-left-color: var(--success-green); }
+
+        .kpi-title { font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+        .kpi-value { font-size: 1.7rem; font-weight: 700; color: var(--text-dark); margin-top: 0.3rem; }
+
+        /* --- TABLES --- */
+        .table-responsive { width: 100%; overflow-x: auto; }
+        .table { width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left; }
+        .table th { background-color: #f8fafc; padding: 0.75rem 0.85rem; border-bottom: 2px solid var(--border-color); white-space: nowrap; }
+        .table td { padding: 0.75rem 0.85rem; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+
+        /* --- ALERTS & MODAL --- */
+        .alert { padding: 0.85rem 1rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.9rem; }
+        .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+        .alert-danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        .modal-backdrop {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 750px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .view-panel { display: none; }
+        .view-panel.active { display: block; }
+
+        /* MOBILE RESPONSIVE ADJUSTMENTS */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: relative; }
+            .sidebar-header img { max-width: 130px; }
+            .sidebar-menu { display: flex; overflow-x: auto; padding: 0; }
+            .sidebar-menu li a { border-left: none; border-bottom: 3px solid transparent; padding: 0.75rem 1rem; white-space: nowrap; }
+            .sidebar-menu li a.active { border-bottom-color: var(--accent-cyan); }
+            .main-content { margin-left: 0; max-width: 100%; padding: 1rem; }
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+            .top-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen">
+        <div class="login-card">
+            <div class="login-logo">
+                <img src="https://i.imgur.com/8QzX4yB.png" alt="Lucky Core Industries Logo">
+            </div>
+            <h2>Transport Portal</h2>
+            <p>Enter your account credentials to log in.</p>
+            
+            <div id="login-alert"></div>
+
+            <form id="login-form">
+                <div class="form-group" style="text-align: left;">
+                    <label>Username</label>
+                    <input type="text" id="login-username" class="form-control" required placeholder="Username">
+                </div>
+                <div class="form-group" style="text-align: left;">
+                    <label>Password</label>
+                    <input type="password" id="login-password" class="form-control" required placeholder="Password">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Log In</button>
+            </form>
+            <div style="margin-top: 1.5rem; font-size: 0.75rem; color: #777; text-align: left; background: #f8f9fa; padding: 0.5rem; border-radius: 4px;">
+                <strong>Test Accounts:</strong><br>
+                Admin: <code>admin</code> / <code>admin123</code><br>
+                Transporter: <code>transporter1</code> / <code>123456</code>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN SYSTEM CONTAINER -->
+    <div id="app-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="https://i.imgur.com/8QzX4yB.png" alt="Lucky Core Industries Logo">
+            </div>
+            
+            <ul class="sidebar-menu" id="sidebar-menu">
+                <!-- Navigation inserted dynamically -->
+            </ul>
+
+            <div class="sidebar-user">
+                <div style="font-weight: 600;" id="user-display-name">User Name</div>
+                <div style="color: rgba(255,255,255,0.7); font-size: 0.75rem;" id="user-display-company">Company</div>
+                <button onclick="logoutUser()" class="btn btn-sm btn-secondary" style="width: 100%; margin-top: 0.8rem;">Logout</button>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <div class="top-header">
+                <div class="header-title">
+                    <h1 id="page-title">Dashboard</h1>
+                    <span id="page-subtitle">Lucky Core Industries - Transport Operations</span>
+                </div>
+                <div>
+                    <span id="current-time-display" style="font-weight: 600; color: var(--text-muted); font-size: 0.85rem;"></span>
+                </div>
+            </div>
+
+            <!-- VIEW 1: ADMIN DASHBOARD -->
+            <div id="view-dashboard" class="view-panel">
+                <div class="kpi-container">
+                    <div class="kpi-card">
+                        <div class="kpi-title">Total Shipments</div>
+                        <div class="kpi-value" id="kpi-total-shipments">0</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Total Containers</div>
+                        <div class="kpi-value" id="kpi-total-containers">0</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">20' / 40' Split</div>
+                        <div class="kpi-value" style="font-size: 1.2rem; margin-top: 0.5rem;" id="kpi-container-split">0 / 0</div>
+                    </div>
+                    <div class="kpi-card kpi-warning">
+                        <div class="kpi-title">Pending</div>
+                        <div class="kpi-value" id="kpi-pending">0</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">In Transit</div>
+                        <div class="kpi-value" id="kpi-in-transit">0</div>
+                    </div>
+                    <div class="kpi-card kpi-success">
+                        <div class="kpi-title">Delivered</div>
+                        <div class="kpi-value" id="kpi-delivered">0</div>
+                    </div>
+                    <div class="kpi-card kpi-danger">
+                        <div class="kpi-title">Overdue</div>
+                        <div class="kpi-value" id="kpi-overdue">0</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Transporter Performance Overview</div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Transporter / Company</th>
+                                    <th>Total Shipments</th>
+                                    <th>Containers</th>
+                                    <th>Delivered</th>
+                                    <th>Pending</th>
+                                    <th>Overdue</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transporter-performance-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 2: MASTER INTERFACE (ADMIN) -->
+            <div id="view-master" class="view-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Filter & Control Center</div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-accent btn-sm" onclick="refreshMasterInterface()">⟳ REFRESH DATA</button>
+                            <button class="btn btn-secondary btn-sm" onclick="exportCSV()">Export CSV</button>
+                        </div>
+                    </div>
+                    
+                    <div class="grid-4">
+                        <div class="form-group">
+                            <label>Date Filter</label>
+                            <select id="filter-date-range" class="form-control" onchange="applyMasterFilters()">
+                                <option value="ALL">All Time</option>
+                                <option value="TODAY">Today</option>
+                                <option value="YESTERDAY">Yesterday</option>
+                                <option value="LAST_7">Last 7 Days</option>
+                                <option value="THIS_MONTH">This Month</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Transporter</label>
+                            <select id="filter-transporter" class="form-control" onchange="applyMasterFilters()">
+                                <option value="ALL">All Transporters</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Shipment Type</label>
+                            <select id="filter-type" class="form-control" onchange="applyMasterFilters()">
+                                <option value="ALL">All Types</option>
+                                <option value="FCL">FCL</option>
+                                <option value="LCL">LCL</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="filter-status" class="form-control" onchange="applyMasterFilters()">
+                                <option value="ALL">All Statuses</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Vehicle Assigned">Vehicle Assigned</option>
+                                <option value="In Transit">In Transit</option>
+                                <option value="Delivered">Delivered</option>
+                                <option value="POD Pending">POD Pending</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Global Search</label>
+                            <input type="text" id="filter-search" class="form-control" placeholder="Search Ref, ID, Agent, POL, Delivery Point..." oninput="applyMasterFilters()">
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: flex-end;">
+                            <button class="btn btn-secondary" onclick="resetMasterFilters()" style="width: 100%;">Clear Filters</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Master Transport Tracking</div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table" id="master-records-table">
+                            <thead>
+                                <tr>
+                                    <th>Record ID</th>
+                                    <th>Transporter</th>
+                                    <th>GP Date & Time</th>
+                                    <th>Shipment Ref</th>
+                                    <th>Type</th>
+                                    <th>Total Cont.</th>
+                                    <th>20'</th>
+                                    <th>40'</th>
+                                    <th>POL</th>
+                                    <th>Delivery Point</th>
+                                    <th>Agent</th>
+                                    <th>Status</th>
+                                    <th>Delivery Date/Time</th>
+                                    <th>TAT</th>
+                                    <th>Delay Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 3: LINKED USER ENTRY FORM -->
+            <div id="view-entry" class="view-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">New Transport Request Entry</div>
+                    </div>
+                    
+                    <div id="submission-alert"></div>
+
+                    <form id="transport-entry-form">
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>Shipment Reference *</label>
+                                <input type="text" id="entry-shipment-ref" class="form-control" required placeholder="e.g. SH-88291">
+                            </div>
+                            <div class="form-group">
+                                <label>Shipment Type *</label>
+                                <select id="entry-shipment-type" class="form-control" onchange="handleShipmentTypeChange()" required>
+                                    <option value="FCL">FCL</option>
+                                    <option value="LCL">LCL</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="lcl-warning-banner" class="alert alert-warning" style="display: none;">
+                            <strong>LCL Shipment Selected:</strong> Container quantities automatically locked to 0.
+                        </div>
+
+                        <div class="grid-3">
+                            <div class="form-group">
+                                <label>No. of Containers (Overall)</label>
+                                <input type="text" id="entry-total-containers" class="form-control" placeholder="Enter quantity (e.g. 5)">
+                            </div>
+                            <div class="form-group">
+                                <label>20' Containers</label>
+                                <input type="number" id="entry-containers-20" class="form-control" value="0" oninput="calculateContainerSum()">
+                            </div>
+                            <div class="form-group">
+                                <label>40' Containers</label>
+                                <input type="number" id="entry-containers-40" class="form-control" value="0" oninput="calculateContainerSum()">
+                            </div>
+                        </div>
+
+                        <div id="container-mismatch-warning" class="alert alert-warning" style="display: none; font-size: 0.8rem; padding: 0.5rem 1rem;">
+                            ⚠️ Warning: Calculated sum of 20' + 40' containers does not match Overall No. of Containers.
+                        </div>
+
+                        <div class="grid-3">
+                            <div class="form-group">
+                                <label>Port of Loading (POL) *</label>
+                                <input type="text" id="entry-pol" class="form-control" required placeholder="e.g. Karachi Port / Port Qasim">
+                            </div>
+                            <div class="form-group">
+                                <label>Delivery Point *</label>
+                                <input type="text" id="entry-delivery-point" class="form-control" required placeholder="e.g. Plant 2100 / Sheikhupura">
+                            </div>
+                            <div class="form-group">
+                                <label>Agent *</label>
+                                <input type="text" id="entry-agent" class="form-control" required placeholder="e.g. ABC Logistics Agent">
+                            </div>
+                        </div>
+
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>Gate Pass Received Date *</label>
+                                <input type="date" id="entry-gp-date" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Gate Pass Received Time *</label>
+                                <input type="time" id="entry-gp-time" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 1.5rem;">
+                            <button type="submit" id="btn-submit-request" class="btn btn-primary" style="width: 100%; font-size: 1.1rem; padding: 0.85rem;">SUBMIT TRANSPORT REQUEST</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- VIEW 4: MY SUBMISSIONS (TRANSPORTER) -->
+            <div id="view-my-submissions" class="view-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">My Submitted Records</div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Record ID</th>
+                                    <th>Ref</th>
+                                    <th>Type</th>
+                                    <th>Containers</th>
+                                    <th>POL</th>
+                                    <th>Delivery Point</th>
+                                    <th>Gate Pass Date/Time</th>
+                                    <th>Status</th>
+                                    <th>TAT</th>
+                                </tr>
+                            </thead>
+                            <tbody id="my-submissions-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 5: LINKED USERS MANAGEMENT (ADMIN) -->
+            <div id="view-users" class="view-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Linked Transporters / Users</div>
+                        <button class="btn btn-primary btn-sm" onclick="openUserModal()">+ ADD NEW USER</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>User ID</th>
+                                    <th>User Name</th>
+                                    <th>Company</th>
+                                    <th>Username</th>
+                                    <th>Status</th>
+                                    <th>Created Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 6: MASTER DATA & SYSTEM SETTINGS (ADMIN) -->
+            <div id="view-master-data" class="view-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">SLA / TAT Settings</div>
+                    </div>
+                    <form id="master-data-form">
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>Expected TAT for FCL (Hours)</label>
+                                <input type="number" id="tat-fcl" class="form-control" required min="1">
+                            </div>
+                            <div class="form-group">
+                                <label>Expected TAT for LCL (Hours)</label>
+                                <input type="number" id="tat-lcl" class="form-control" required min="1">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save SLA Settings</button>
+                    </form>
+                </div>
+
+                <div class="card" style="border: 1px solid var(--danger-red);">
+                    <div class="card-header">
+                        <div class="card-title" style="color: var(--danger-red);">Clear System Data</div>
+                    </div>
+                    <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem;">
+                        Caution: This action will permanently delete all transport records stored in local memory.
+                    </p>
+                    <button class="btn btn-danger" onclick="clearAllSystemData()">Purge All Transport Records</button>
+                </div>
+            </div>
+
+            <!-- VIEW 7: REPORTS (ADMIN) -->
+            <div id="view-reports" class="view-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Executive Transport Summary</div>
+                    </div>
+                    <p>Generate analytical outputs or print official company transport logs directly.</p>
+                    <br>
+                    <button class="btn btn-primary" onclick="window.print()">Print Executive Report</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ADMIN RECORD EDIT MODAL -->
+    <div id="edit-record-modal" class="modal-backdrop">
+        <div class="modal">
+            <div class="card-header">
+                <div class="card-title">Edit Transport Record - <span id="modal-record-id"></span></div>
+                <button class="btn btn-sm btn-secondary" onclick="closeEditModal()">X</button>
+            </div>
+            <form id="edit-record-form">
+                <input type="hidden" id="edit-id">
+                
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Transport Status</label>
+                        <select id="edit-status" class="form-control">
+                            <option value="Pending">Pending</option>
+                            <option value="Vehicle Assigned">Vehicle Assigned</option>
+                            <option value="In Transit">In Transit</option>
+                            <option value="Delivered">Delivered</option>
+                            <option value="POD Pending">POD Pending</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Shipment Ref</label>
+                        <input type="text" id="edit-shipment-ref" class="form-control">
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Gate Out Date</label>
+                        <input type="date" id="edit-gateout-date" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Gate Out Time</label>
+                        <input type="time" id="edit-gateout-time" class="form-control">
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Delivery Date</label>
+                        <input type="date" id="edit-delivery-date" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Delivery Time</label>
+                        <input type="time" id="edit-delivery-time" class="form-control">
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>POD Received Date</label>
+                        <input type="date" id="edit-pod-date" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>POD Received Time</label>
+                        <input type="time" id="edit-pod-time" class="form-control">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Remarks</label>
+                    <textarea id="edit-remarks" class="form-control" rows="3"></textarea>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem;">
+                    <button type="button" class="btn btn-danger" onclick="deleteSingleRecordFromModal()">Delete Item</button>
+                    <div>
+                        <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Updates</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- USER MODAL (CREATE / EDIT) -->
+    <div id="user-modal" class="modal-backdrop">
+        <div class="modal" style="max-width: 500px;">
+            <div class="card-header">
+                <div class="card-title" id="user-modal-title">Add Transporter Account</div>
+                <button class="btn btn-sm btn-secondary" onclick="closeUserModal()">X</button>
+            </div>
+            <form id="user-form">
+                <div class="form-group">
+                    <label>User Name *</label>
+                    <input type="text" id="user-name" class="form-control" required placeholder="Contact Person">
+                </div>
+                <div class="form-group">
+                    <label>Company / Transporter Name *</label>
+                    <input type="text" id="user-company" class="form-control" required placeholder="Logistics Firm Name">
+                </div>
+                <div class="form-group">
+                    <label>Username *</label>
+                    <input type="text" id="user-username" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Password *</label>
+                    <input type="password" id="user-password" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="user-status" class="form-control">
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                </div>
+                <div style="text-align: right; margin-top: 1.5rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeUserModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- APPLICATION LOGIC -->
+    <script>
+        // DATA ACCESS ADAPTER
+        const StorageAdapter = {
+            getRecords: () => JSON.parse(localStorage.getItem('transportRecords')) || [],
+            saveRecords: (records) => localStorage.setItem('transportRecords', JSON.stringify(records)),
+            
+            getUsers: () => JSON.parse(localStorage.getItem('linkedUsers')) || [],
+            saveUsers: (users) => localStorage.setItem('linkedUsers', JSON.stringify(users)),
+            
+            getSettings: () => JSON.parse(localStorage.getItem('masterSettings')) || { expectedTatFcl: 24, expectedTatLcl: 48 },
+            saveSettings: (settings) => localStorage.setItem('masterSettings', JSON.stringify(settings)),
+
+            getSession: () => JSON.parse(localStorage.getItem('session')) || null,
+            saveSession: (session) => localStorage.setItem('session', JSON.stringify(session)),
+            clearSession: () => localStorage.removeItem('session')
+        };
+
+        let currentUser = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initSystemDefaults();
+            checkSession();
+            updateClock();
+            setInterval(updateClock, 1000);
+        });
+
+        function updateClock() {
+            document.getElementById('current-time-display').innerText = new Date().toLocaleString();
+        }
+
+        function initSystemDefaults() {
+            if (!localStorage.getItem('linkedUsers')) {
+                StorageAdapter.saveUsers([
+                    { id: 'USR-000', name: 'Master Admin', company: 'Lucky Core Industries', username: 'admin', password: 'admin123', status: 'Active', role: 'ADMIN', createdAt: '2026-01-01' },
+                    { id: 'USR-001', name: 'Zubair Transporter', company: 'ABC Logistics', username: 'transporter1', password: '123456', status: 'Active', role: 'USER', createdAt: '2026-01-15' }
+                ]);
+            }
+
+            if (!localStorage.getItem('masterSettings')) {
+                StorageAdapter.saveSettings({ expectedTatFcl: 24, expectedTatLcl: 48 });
+            }
+
+            if (!localStorage.getItem('transportRecords')) {
+                StorageAdapter.saveRecords([
+                    {
+                        id: "TR-20260916-0001", userId: "USR-001", userName: "Zubair Transporter", companyName: "ABC Logistics",
+                        shipmentReference: "SH-001", shipmentType: "FCL", totalContainers: 5, containers20: 2, containers40: 3,
+                        portOfLoading: "Karachi Port", deliveryPoint: "Plant 2100", agent: "ABC Clearing",
+                        gatePassDate: "2026-09-16", gatePassTime: "10:30", gateOutDate: "2026-09-16", gateOutTime: "11:00",
+                        deliveryDate: "2026-09-16", deliveryTime: "18:30", podReceivedDate: "", podReceivedTime: "",
+                        status: "Delivered", remarks: "Completed on schedule", createdAt: "2026-09-16 10:35:00"
+                    }
+                ]);
+            }
+        }
+
+        // LOGIN / AUTH
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const u = document.getElementById('login-username').value.trim();
+            const p = document.getElementById('login-password').value.trim();
+
+            const users = StorageAdapter.getUsers();
+            const matchedUser = users.find(user => user.username === u && user.password === p);
+
+            if (matchedUser) {
+                if (matchedUser.status === 'Inactive') {
+                    showLoginAlert('User account deactivated.', 'danger');
+                    return;
+                }
+                currentUser = matchedUser;
+                StorageAdapter.saveSession(matchedUser);
+                document.getElementById('login-screen').style.display = 'none';
+                setupUserInterface();
+            } else {
+                showLoginAlert('Invalid credentials.', 'danger');
+            }
+        });
+
+        function showLoginAlert(msg, type) {
+            document.getElementById('login-alert').innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+        }
+
+        function checkSession() {
+            const session = StorageAdapter.getSession();
+            if (session) {
+                currentUser = session;
+                document.getElementById('login-screen').style.display = 'none';
+                setupUserInterface();
+            } else {
+                document.getElementById('login-screen').style.display = 'flex';
+            }
+        }
+
+        function logoutUser() {
+            StorageAdapter.clearSession();
+            window.location.reload();
+        }
+
+        // NAVIGATION & VIEWS
+        function setupUserInterface() {
+            document.getElementById('user-display-name').innerText = currentUser.name;
+            document.getElementById('user-display-company').innerText = currentUser.company;
+
+            const menu = document.getElementById('sidebar-menu');
+            menu.innerHTML = '';
+
+            if (currentUser.role === 'ADMIN') {
+                menu.innerHTML = `
+                    <li><a href="#" onclick="switchView('dashboard', this)" class="active">Dashboard</a></li>
+                    <li><a href="#" onclick="switchView('master', this)">Master Tracking</a></li>
+                    <li><a href="#" onclick="switchView('entry', this)">Request Entry</a></li>
+                    <li><a href="#" onclick="switchView('users', this)">Linked Users</a></li>
+                    <li><a href="#" onclick="switchView('master-data', this)">Master Data</a></li>
+                    <li><a href="#" onclick="switchView('reports', this)">Reports</a></li>
+                `;
+                switchView('dashboard');
+            } else {
+                menu.innerHTML = `
+                    <li><a href="#" onclick="switchView('entry', this)" class="active">Transport Request</a></li>
+                    <li><a href="#" onclick="switchView('my-submissions', this)">My Submissions</a></li>
+                `;
+                switchView('entry');
+            }
+        }
+
+        function switchView(viewName, el) {
+            if (el) {
+                document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('active'));
+                el.classList.add('active');
+            }
+
+            document.querySelectorAll('.view-panel').forEach(v => v.classList.remove('active'));
+
+            const titleMap = {
+                'dashboard': ['Management Dashboard', 'Overview & Transporter Metrics'],
+                'master': ['Master Interface', 'All Transport Records'],
+                'entry': ['Transport Entry Form', 'Data Input'],
+                'my-submissions': ['My Submissions', 'Log History'],
+                'users': ['Linked Transporters', 'Account Management'],
+                'master-data': ['Master Settings', 'System SLAs & Maintenance'],
+                'reports': ['System Reports', 'Printable Views']
+            };
+
+            if (titleMap[viewName]) {
+                document.getElementById('page-title').innerText = titleMap[viewName][0];
+                document.getElementById('page-subtitle').innerText = titleMap[viewName][1];
+            }
+
+            document.getElementById(`view-${viewName}`).classList.add('active');
+
+            if (viewName === 'dashboard') renderDashboard();
+            if (viewName === 'master') renderMasterInterface();
+            if (viewName === 'my-submissions') renderMySubmissions();
+            if (viewName === 'users') renderUsersTable();
+            if (viewName === 'master-data') loadMasterDataForm();
+        }
+
+        // ENTRY FORM LOGIC
+        function handleShipmentTypeChange() {
+            const type = document.getElementById('entry-shipment-type').value;
+            const c20 = document.getElementById('entry-containers-20');
+            const c40 = document.getElementById('entry-containers-40');
+            const cTotal = document.getElementById('entry-total-containers');
+            const lclBanner = document.getElementById('lcl-warning-banner');
+
+            if (type === 'LCL') {
+                c20.value = 0; c40.value = 0; cTotal.value = 0;
+                c20.disabled = true; c40.disabled = true; cTotal.disabled = true;
+                lclBanner.style.display = 'block';
+            } else {
+                c20.disabled = false; c40.disabled = false; cTotal.disabled = false;
+                lclBanner.style.display = 'none';
+            }
+        }
+
+        function calculateContainerSum() {
+            const c20 = parseInt(document.getElementById('entry-containers-20').value) || 0;
+            const c40 = parseInt(document.getElementById('entry-containers-40').value) || 0;
+            const overallInput = document.getElementById('entry-total-containers');
+            
+            const calcTotal = c20 + c40;
+            if(!overallInput.value || overallInput.hasAttribute('data-auto')) {
+                overallInput.value = calcTotal;
+                overallInput.setAttribute('data-auto', 'true');
+            }
+
+            const enteredTotal = parseInt(overallInput.value) || 0;
+            document.getElementById('container-mismatch-warning').style.display = (enteredTotal !== calcTotal) ? 'block' : 'none';
+        }
+
+        document.getElementById('transport-entry-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const records = StorageAdapter.getRecords();
+            const todayStr = new Date().toISOString().slice(0,10).replace(/-/g, "");
+            const recordId = `TR-${todayStr}-${String(records.length + 1).padStart(4, '0')}`;
+
+            const newRecord = {
+                id: recordId,
+                userId: currentUser.id,
+                userName: currentUser.name,
+                companyName: currentUser.company,
+                shipmentReference: document.getElementById('entry-shipment-ref').value.trim(),
+                shipmentType: document.getElementById('entry-shipment-type').value,
+                totalContainers: parseInt(document.getElementById('entry-total-containers').value) || 0,
+                containers20: parseInt(document.getElementById('entry-containers-20').value) || 0,
+                containers40: parseInt(document.getElementById('entry-containers-40').value) || 0,
+                portOfLoading: document.getElementById('entry-pol').value.trim(),
+                deliveryPoint: document.getElementById('entry-delivery-point').value.trim(),
+                agent: document.getElementById('entry-agent').value.trim(),
+                gatePassDate: document.getElementById('entry-gp-date').value,
+                gatePassTime: document.getElementById('entry-gp-time').value,
+                status: "Pending",
+                createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19)
+            };
+
+            records.push(newRecord);
+            StorageAdapter.saveRecords(records);
+
+            document.getElementById('submission-alert').innerHTML = `
+                <div class="alert alert-success">
+                    Request submitted successfully.<br><strong>Record ID:</strong> ${recordId}
+                </div>
+            `;
+
+            this.reset();
+            handleShipmentTypeChange();
+        });
+
+        // TAT & CALCULATIONS
+        function calculateTATAndDelay(record) {
+            const settings = StorageAdapter.getSettings();
+            const expectedHours = record.shipmentType === 'LCL' ? settings.expectedTatLcl : settings.expectedTatFcl;
+
+            if (!record.gatePassDate || !record.gatePassTime) return { elapsedText: '-', isOverdue: false };
+
+            const startDt = new Date(`${record.gatePassDate}T${record.gatePassTime}`);
+            const endDt = (record.deliveryDate && record.deliveryTime) ? new Date(`${record.deliveryDate}T${record.deliveryTime}`) : new Date();
+
+            const diffMs = endDt - startDt;
+            if (diffMs < 0) return { elapsedText: '0h 00m', isOverdue: false };
+
+            const totalHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const totalMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+            return {
+                elapsedText: `${totalHours}h ${totalMins}m`,
+                isOverdue: totalHours > expectedHours,
+                delayText: totalHours > expectedHours ? `Delay: ${totalHours - expectedHours}h` : 'On Time'
+            };
+        }
+
+        // RENDER MASTER TABLE
+        function refreshMasterInterface() {
+            renderMasterInterface();
+            alert('Interface reloaded with fresh records.');
+        }
+
+        function renderMasterInterface() {
+            populateTransporterFilterOptions();
+            applyMasterFilters();
+        }
+
+        function populateTransporterFilterOptions() {
+            const users = StorageAdapter.getUsers();
+            const select = document.getElementById('filter-transporter');
+            select.innerHTML = '<option value="ALL">All Transporters</option>';
+            users.forEach(u => {
+                if (u.role !== 'ADMIN') select.innerHTML += `<option value="${u.company}">${u.company}</option>`;
+            });
+        }
+
+        function applyMasterFilters() {
+            let records = StorageAdapter.getRecords();
+
+            const range = document.getElementById('filter-date-range').value;
+            const now = new Date();
+            if (range === 'TODAY') {
+                records = records.filter(r => r.gatePassDate === now.toISOString().slice(0,10));
+            } else if (range === 'YESTERDAY') {
+                const yest = new Date(now); yest.setDate(yest.getDate() - 1);
+                records = records.filter(r => r.gatePassDate === yest.toISOString().slice(0,10));
+            }
+
+            const transporter = document.getElementById('filter-transporter').value;
+            if (transporter !== 'ALL') records = records.filter(r => r.companyName === transporter);
+
+            const type = document.getElementById('filter-type').value;
+            if (type !== 'ALL') records = records.filter(r => r.shipmentType === type);
+
+            const status = document.getElementById('filter-status').value;
+            if (status !== 'ALL') records = records.filter(r => r.status === status);
+
+            const query = document.getElementById('filter-search').value.toLowerCase().trim();
+            if (query) {
+                records = records.filter(r => 
+                    (r.shipmentReference && r.shipmentReference.toLowerCase().includes(query)) ||
+                    (r.id && r.id.toLowerCase().includes(query)) ||
+                    (r.companyName && r.companyName.toLowerCase().includes(query)) ||
+                    (r.agent && r.agent.toLowerCase().includes(query))
+                );
+            }
+
+            records.sort((a, b) => new Date(`${b.gatePassDate}T${b.gatePassTime}`) - new Date(`${a.gatePassDate}T${a.gatePassTime}`));
+
+            const tbody = document.querySelector('#master-records-table tbody');
+            tbody.innerHTML = '';
+
+            records.forEach(r => {
+                const tatInfo = calculateTATAndDelay(r);
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${r.id}</strong></td>
+                        <td>${r.companyName}</td>
+                        <td>${r.gatePassDate} ${r.gatePassTime}</td>
+                        <td>${r.shipmentReference}</td>
+                        <td>${r.shipmentType}</td>
+                        <td>${r.totalContainers}</td>
+                        <td>${r.containers20}</td>
+                        <td>${r.containers40}</td>
+                        <td>${r.portOfLoading}</td>
+                        <td>${r.deliveryPoint}</td>
+                        <td>${r.agent}</td>
+                        <td><span class="badge badge-pending">${r.status}</span></td>
+                        <td>${r.deliveryDate ? r.deliveryDate + ' ' + r.deliveryTime : '-'}</td>
+                        <td>${tatInfo.elapsedText}</td>
+                        <td>${tatInfo.isOverdue ? `<span class="badge badge-overdue">${tatInfo.delayText}</span>` : 'On Time'}</td>
+                        <td><button class="btn btn-sm btn-primary" onclick="openEditModal('${r.id}')">EDIT</button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function resetMasterFilters() {
+            document.getElementById('filter-date-range').value = 'ALL';
+            document.getElementById('filter-transporter').value = 'ALL';
+            document.getElementById('filter-type').value = 'ALL';
+            document.getElementById('filter-status').value = 'ALL';
+            document.getElementById('filter-search').value = '';
+            applyMasterFilters();
+        }
+
+        function renderMySubmissions() {
+            const records = StorageAdapter.getRecords().filter(r => r.userId === currentUser.id);
+            const tbody = document.getElementById('my-submissions-table');
+            tbody.innerHTML = '';
+
+            records.forEach(r => {
+                const tatInfo = calculateTATAndDelay(r);
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${r.id}</strong></td>
+                        <td>${r.shipmentReference}</td>
+                        <td>${r.shipmentType}</td>
+                        <td>${r.totalContainers}</td>
+                        <td>${r.portOfLoading}</td>
+                        <td>${r.deliveryPoint}</td>
+                        <td>${r.gatePassDate} ${r.gatePassTime}</td>
+                        <td><span class="badge badge-pending">${r.status}</span></td>
+                        <td>${tatInfo.elapsedText}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderDashboard() {
+            const records = StorageAdapter.getRecords();
+            let totalContainers = 0, total20 = 0, total40 = 0, pending = 0, delivered = 0, overdue = 0;
+
+            records.forEach(r => {
+                totalContainers += parseInt(r.totalContainers) || 0;
+                total20 += parseInt(r.containers20) || 0;
+                total40 += parseInt(r.containers40) || 0;
+                if (r.status === 'Pending') pending++;
+                if (r.status === 'Delivered') delivered++;
+                if (calculateTATAndDelay(r).isOverdue) overdue++;
+            });
+
+            document.getElementById('kpi-total-shipments').innerText = records.length;
+            document.getElementById('kpi-total-containers').innerText = totalContainers;
+            document.getElementById('kpi-container-split').innerText = `${total20} / ${total40}`;
+            document.getElementById('kpi-pending').innerText = pending;
+            document.getElementById('kpi-delivered').innerText = delivered;
+            document.getElementById('kpi-overdue').innerText = overdue;
+        }
+
+        // EDIT & DELETE SINGLE RECORD
+        function openEditModal(recordId) {
+            const records = StorageAdapter.getRecords();
+            const r = records.find(item => item.id === recordId);
+            if (!r) return;
+
+            document.getElementById('modal-record-id').innerText = r.id;
+            document.getElementById('edit-id').value = r.id;
+            document.getElementById('edit-status').value = r.status;
+            document.getElementById('edit-shipment-ref').value = r.shipmentReference;
+            document.getElementById('edit-gateout-date').value = r.gateOutDate || '';
+            document.getElementById('edit-gateout-time').value = r.gateOutTime || '';
+            document.getElementById('edit-delivery-date').value = r.deliveryDate || '';
+            document.getElementById('edit-delivery-time').value = r.deliveryTime || '';
+            document.getElementById('edit-remarks').value = r.remarks || '';
+
+            document.getElementById('edit-record-modal').style.display = 'flex';
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-record-modal').style.display = 'none';
+        }
+
+        document.getElementById('edit-record-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const recordId = document.getElementById('edit-id').value;
+            const records = StorageAdapter.getRecords();
+            const idx = records.findIndex(r => r.id === recordId);
+
+            if (idx !== -1) {
+                records[idx].status = document.getElementById('edit-status').value;
+                records[idx].shipmentReference = document.getElementById('edit-shipment-ref').value;
+                records[idx].gateOutDate = document.getElementById('edit-gateout-date').value;
+                records[idx].gateOutTime = document.getElementById('edit-gateout-time').value;
+                records[idx].deliveryDate = document.getElementById('edit-delivery-date').value;
+                records[idx].deliveryTime = document.getElementById('edit-delivery-time').value;
+                records[idx].remarks = document.getElementById('edit-remarks').value;
+
+                StorageAdapter.saveRecords(records);
+                closeEditModal();
+                renderMasterInterface();
+            }
+        });
+
+        function deleteSingleRecordFromModal() {
+            const recordId = document.getElementById('edit-id').value;
+            if (confirm(`Delete record ${recordId}?`)) {
+                let records = StorageAdapter.getRecords().filter(r => r.id !== recordId);
+                StorageAdapter.saveRecords(records);
+                closeEditModal();
+                renderMasterInterface();
+            }
+        }
+
+        function clearAllSystemData() {
+            if (confirm("Are you sure you want to clear ALL transport records?")) {
+                StorageAdapter.saveRecords([]);
+                renderMasterInterface();
+            }
+        }
+
+        function exportCSV() {
+            const records = StorageAdapter.getRecords();
+            let csvContent = "data:text/csv;charset=utf-8,ID,Ref,Type,Containers,POL,Delivery Point,Status\n";
+            records.forEach(r => {
+                csvContent += `${r.id},${r.shipmentReference},${r.shipmentType},${r.totalContainers},"${r.portOfLoading}","${r.deliveryPoint}",${r.status}\n`;
+            });
+            const link = document.createElement("a");
+            link.setAttribute("href", encodeURI(csvContent));
+            link.setAttribute("download", "LCI_Transport_Export.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // USERS & SETTINGS
+        function renderUsersTable() {
+            const users = StorageAdapter.getUsers();
+            const tbody = document.getElementById('users-table-body');
+            tbody.innerHTML = '';
+            users.forEach(u => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${u.id}</strong></td>
+                        <td>${u.name}</td>
+                        <td>${u.company}</td>
+                        <td>${u.username}</td>
+                        <td><span class="badge ${u.status === 'Active' ? 'badge-active' : 'badge-inactive'}">${u.status}</span></td>
+                        <td>${u.createdAt}</td>
+                        <td>${u.role !== 'ADMIN' ? `<button class="btn btn-sm btn-secondary" onclick="toggleUserStatus('${u.id}')">Toggle Status</button>` : '-'}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function openUserModal() { document.getElementById('user-modal').style.display = 'flex'; }
+        function closeUserModal() { document.getElementById('user-modal').style.display = 'none'; }
+
+        function toggleUserStatus(userId) {
+            const users = StorageAdapter.getUsers();
+            const u = users.find(item => item.id === userId);
+            if (u) {
+                u.status = u.status === 'Active' ? 'Inactive' : 'Active';
+                StorageAdapter.saveUsers(users);
+                renderUsersTable();
+            }
+        }
+
+        function loadMasterDataForm() {
+            const settings = StorageAdapter.getSettings();
+            document.getElementById('tat-fcl').value = settings.expectedTatFcl;
+            document.getElementById('tat-lcl').value = settings.expectedTatLcl;
+        }
+
+        document.getElementById('master-data-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            StorageAdapter.saveSettings({
+                expectedTatFcl: parseInt(document.getElementById('tat-fcl').value),
+                expectedTatLcl: parseInt(document.getElementById('tat-lcl').value)
+            });
+            alert('SLA settings updated.');
+        });
+    </script>
+</body>
+</html>
